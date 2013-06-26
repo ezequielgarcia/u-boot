@@ -322,4 +322,11 @@ config MT7621_GPIO
 	help
 	  Say yes here to support MediaTek MT7621 compatible GPIOs.
 
+config JZ47XX_GPIO
+	bool "Ingenic JZ47xx GPIO driver"
+	depends on ARCH_JZ47XX
+	default y
+	help
+	  Supports GPIO access on Ingenic JZ47xx SoCs.
+
 endmenu
