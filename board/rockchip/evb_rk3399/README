@@ -57,6 +57,8 @@ Compile the U-Boot
   > make evb-rk3399_defconfig
   for firefly-rk3399, use below instead:
   > make firefly-rk3399_defconfig
+  for ficus-rk3399, use below instead:
+  > make ficus-rk3399_defconfig
   > make
   > make u-boot.itb
 
