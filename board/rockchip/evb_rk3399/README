@@ -1,3 +1,21 @@
+Contents
+========
+
+1. Introduction
+2. Get the Source and prebuild binary
+3. Compile the ATF
+4. Compile the U-Boot
+5. Compile the rkdeveloptool
+6. Package the image
+   6.1. Package the image for U-Boot SPL(option 1)
+   6.2. Package the image for Rockchip miniloader(option 2)
+7. Bootloader storage options
+8. Flash the image to eMMC
+   8.1. Flash the image with U-Boot SPL(option 1)
+   8.2. Flash the image with Rockchip miniloader(option 2)
+9. Create a bootable SD/MMC
+10. And that is it
+
 Introduction
 ============
 
@@ -97,6 +115,12 @@ Package the image for Rockchip miniloader(option 2)
 
   Get trust.img and uboot.img in this step.
 
+Bootloader storage options
+==========================
+
+There are a few different storage options for the bootloader.
+This document explores two of these: eMMC and removable SD/MMC.
+
 Flash the image to eMMC
 =======================
 
@@ -117,6 +141,33 @@ Power on(or reset with RESET KEY) with MASKROM KEY preesed, and then:
   > rkdeveloptool wl 0x6000 u-boot/trust.img
   > rkdeveloptool rd
 
+Create a bootable SD/MMC
+========================
+
+The idbspl.img contains the first stage, and the u-boot.img the second stage.
+As explained in the Rockchip partition table reference [2], the first stage
+(aka loader1) start sector is 64, and the second stage start sector is 16384.
+
+Each sector is 512 bytes, which means the first stage offset is 32 KiB,
+and the second stage offset is 8 MiB.
+
+Note: the second stage location is actually not as per the spec,
+but defined by the SPL. Mainline SPL defines an 8 MiB offset for the second
+stage.
+
+Assuming the SD card is exposed by device /dev/mmcblk0, the commands
+to write the two stages are:
+
+  > dd if=idbspl.img of=/dev/mmcblk0 bs=1k seek=32
+  > dd if=u-boot.itb of=/dev/mmcblk0 bs=1k seek=8192
+
+Setting up the kernel and rootfs is beyond the scope of this document.
+
+And that is it
+==============
+
 You should be able to get U-Boot log in console/UART2(baurdrate 1500000)
-For more detail, please reference to:
-http://opensource.rock-chips.com/wiki_Boot_option
+For more detail, please reference [2].
+
+[1] http://opensource.rock-chips.com/wiki_Partitions
+[2] http://opensource.rock-chips.com/wiki_Boot_option
