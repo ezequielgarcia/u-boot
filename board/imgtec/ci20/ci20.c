@@ -27,6 +27,46 @@ struct ci20_otp {
 	u8	mac[6];
 } __packed;
 
+/* TODO: This should go awary once ethernet
+ * is properly instantiated from devicetree.
+ */
+void jz47xx_gpio_direction_input(unsigned int gpio)
+{
+	void __iomem *gpio_regs = (void __iomem *)GPIO_BASE;
+	int port = gpio / 32;
+	int pin = gpio % 32;
+
+	writel(BIT(pin), gpio_regs + GPIO_PXINTC(port));
+	writel(BIT(pin), gpio_regs + GPIO_PXMASKS(port));
+	writel(BIT(pin), gpio_regs + GPIO_PXPAT1S(port));
+}
+
+void jz47xx_gpio_direction_output(unsigned int gpio, int value)
+{
+	void __iomem *gpio_regs = (void __iomem *)GPIO_BASE;
+	int port = gpio / 32;
+	int pin = gpio % 32;
+
+	writel(BIT(pin), gpio_regs + GPIO_PXINTC(port));
+	writel(BIT(pin), gpio_regs + GPIO_PXMASKS(port));
+	writel(BIT(pin), gpio_regs + GPIO_PXPAT1C(port));
+}
+
+static void ci20_mux_mmc(void)
+{
+	void __iomem *gpio_regs = (void __iomem *)GPIO_BASE;
+
+	/* setup MSC1 pins */
+	writel(0x30f00000, gpio_regs + GPIO_PXINTC(4));
+	writel(0x30f00000, gpio_regs + GPIO_PXMASKC(4));
+	writel(0x30f00000, gpio_regs + GPIO_PXPAT1C(4));
+	writel(0x30f00000, gpio_regs + GPIO_PXPAT0C(4));
+	writel(0x30f00000, gpio_regs + GPIO_PXPENC(4));
+	jz4780_clk_ungate_mmc();
+}
+
+#ifndef CONFIG_SPL_BUILD
+
 static void ci20_mux_eth(void)
 {
 	void __iomem *gpio_regs = (void __iomem *)GPIO_BASE;
@@ -66,19 +106,6 @@ static void ci20_mux_jtag(void)
 #endif
 }
 
-static void ci20_mux_mmc(void)
-{
-	void __iomem *gpio_regs = (void __iomem *)GPIO_BASE;
-
-	/* setup MSC1 pins */
-	writel(0x30f00000, gpio_regs + GPIO_PXINTC(4));
-	writel(0x30f00000, gpio_regs + GPIO_PXMASKC(4));
-	writel(0x30f00000, gpio_regs + GPIO_PXPAT1C(4));
-	writel(0x30f00000, gpio_regs + GPIO_PXPAT0C(4));
-	writel(0x30f00000, gpio_regs + GPIO_PXPENC(4));
-	jz4780_clk_ungate_mmc();
-}
-
 static void ci20_mux_nand(void)
 {
 	void __iomem *gpio_regs = (void __iomem *)GPIO_BASE;
@@ -96,11 +123,11 @@ static void ci20_mux_nand(void)
 	writel(0x00000003, gpio_regs + GPIO_PXPENS(1));
 
 	/* FRB0_N */
-	gpio_direction_input(32 * 0 + 20);
+	jz47xx_gpio_direction_input(32 * 0 + 20);
 	writel(20, gpio_regs + GPIO_PXPENS(0));
 
 	/* disable write protect */
-	gpio_direction_output(JZ_GPIO(5, 22), 1);
+	jz47xx_gpio_direction_output(JZ_GPIO(5, 22), 1);
 }
 
 static void ci20_mux_uart(void)
@@ -152,18 +179,17 @@ int board_early_init_f(void)
 	ci20_mux_nand();
 
 	/* SYS_POWER_IND high (LED blue, VBUS on) */
-	gpio_direction_output(JZ_GPIO(5, 15), 1);
+	jz47xx_gpio_direction_output(JZ_GPIO(5, 15), 1);
 
 	/* LEDs off */
-	gpio_direction_output(JZ_GPIO(2, 0), 0);
-	gpio_direction_output(JZ_GPIO(2, 1), 0);
-	gpio_direction_output(JZ_GPIO(2, 2), 0);
-	gpio_direction_output(JZ_GPIO(2, 3), 0);
+	jz47xx_gpio_direction_output(JZ_GPIO(2, 0), 0);
+	jz47xx_gpio_direction_output(JZ_GPIO(2, 1), 0);
+	jz47xx_gpio_direction_output(JZ_GPIO(2, 2), 0);
+	jz47xx_gpio_direction_output(JZ_GPIO(2, 3), 0);
 
 	return 0;
 }
 
-#ifndef CONFIG_SPL_BUILD
 int misc_init_r(void)
 {
 	const u32 efuse_clk = jz4780_clk_get_efuse_clk();
@@ -201,13 +227,13 @@ int board_eth_init(bd_t *bis)
 	jz4780_clk_ungate_ethernet();
 
 	/* Enable power (PB25) */
-	gpio_direction_output(JZ_GPIO(1, 25), 1);
+	jz47xx_gpio_direction_output(JZ_GPIO(1, 25), 1);
 
 	/* Reset (PF12) */
 	mdelay(10);
-	gpio_direction_output(JZ_GPIO(5, 12), 0);
+	jz47xx_gpio_direction_output(JZ_GPIO(5, 12), 0);
 	mdelay(10);
-	gpio_direction_output(JZ_GPIO(5, 12), 1);
+	jz47xx_gpio_direction_output(JZ_GPIO(5, 12), 1);
 	mdelay(10);
 
 	return dm9000_initialize(bis);
@@ -220,8 +246,8 @@ static u8 ci20_revision(void)
 	void __iomem *gpio_regs = (void __iomem *)GPIO_BASE;
 	int val;
 
-	gpio_direction_input(82);
-	gpio_direction_input(83);
+	jz47xx_gpio_direction_input(82);
+	jz47xx_gpio_direction_input(83);
 
 	/* Enable pullups */
 	writel(BIT(18) | BIT(19), gpio_regs + GPIO_PXPENC(2));
