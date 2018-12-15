@@ -15,10 +15,9 @@
 #include <asm/gpio.h>
 #include <mach/jz4780.h>
 #include <mach/jz4780_dram.h>
+#include <mach/jz4780_gpio.h>
 
 #define JZ_GPIO(bank, pin)	((32 * (bank)) + (pin))
-
-#define CONFIG_JTAG
 
 struct ci20_otp {
 	u32	serial_number;
@@ -26,31 +25,6 @@ struct ci20_otp {
 	u8	manufacturer[2];
 	u8	mac[6];
 } __packed;
-
-/* TODO: This should go awary once ethernet
- * is properly instantiated from devicetree.
- */
-void jz47xx_gpio_direction_input(unsigned int gpio)
-{
-	void __iomem *gpio_regs = (void __iomem *)GPIO_BASE;
-	int port = gpio / 32;
-	int pin = gpio % 32;
-
-	writel(BIT(pin), gpio_regs + GPIO_PXINTC(port));
-	writel(BIT(pin), gpio_regs + GPIO_PXMASKS(port));
-	writel(BIT(pin), gpio_regs + GPIO_PXPAT1S(port));
-}
-
-void jz47xx_gpio_direction_output(unsigned int gpio, int value)
-{
-	void __iomem *gpio_regs = (void __iomem *)GPIO_BASE;
-	int port = gpio / 32;
-	int pin = gpio % 32;
-
-	writel(BIT(pin), gpio_regs + GPIO_PXINTC(port));
-	writel(BIT(pin), gpio_regs + GPIO_PXMASKS(port));
-	writel(BIT(pin), gpio_regs + GPIO_PXPAT1C(port));
-}
 
 static void ci20_mux_mmc(void)
 {
@@ -253,7 +227,7 @@ static u8 ci20_revision(void)
 	writel(BIT(18) | BIT(19), gpio_regs + GPIO_PXPENC(2));
 
 	/* Read PC18/19 for version */
-	val = (!!gpio_get_value(82)) | ((!!gpio_get_value(83)) << 1);
+	val = (!!jz47xx_gpio_get_value(82)) | ((!!jz47xx_gpio_get_value(83)) << 1);
 
 	if (val == 3)	/* Rev 1 boards had no pulldowns - giving 3 */
 		return 1;

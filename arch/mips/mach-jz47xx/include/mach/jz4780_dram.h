@@ -1,10 +1,9 @@
+/* SPDX-License-Identifier: GPL-2.0+ */
 /*
  * JZ4780 DDR initialization - parameters definitions
  *
  * Copyright (c) 2015 Imagination Technologies
  * Author: Matt Redfearn <matt.redfearn.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #ifndef __JZ4780_DRAM_H__

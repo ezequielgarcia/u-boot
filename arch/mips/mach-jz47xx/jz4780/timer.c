@@ -1,10 +1,9 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * JZ4780 timer
  *
  * Copyright (c) 2013 Imagination Technologies
  * Author: Paul Burton <paul.burton@imgtec.com>
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <config.h>

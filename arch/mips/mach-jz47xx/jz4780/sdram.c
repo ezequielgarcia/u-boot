@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-2.0+
 /*
  * JZ4780 DDR initialization
  *
@@ -6,8 +7,6 @@
  *
  * Based on spl/common/{jz4780_ddr,jz_ddr3_init}.c from X-Boot
  * Copyright (c) 2006-2013 Ingenic Semiconductor
- *
- * SPDX-License-Identifier:	GPL-2.0+
  */
 
 #include <common.h>
