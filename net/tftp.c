@@ -172,10 +172,10 @@ static inline int store_block(int block, uchar *src, unsigned int len)
 		void *ptr;
 
 #ifdef CONFIG_LMB
-		ulong end_addr = tftp_load_addr + tftp_load_size;
+		ulong end_addr = ULONG_MAX;
 
-		if (!end_addr)
-			end_addr = ULONG_MAX;
+		if (tftp_load_size)
+			end_addr = tftp_load_addr + tftp_load_size;
 
 		if (store_addr < tftp_load_addr) {
 			puts("\nTFTP error: ");
@@ -617,6 +617,16 @@ static int tftp_init_load_addr(void)
 	phys_size_t max_size;
 
 	lmb_init_and_reserve(&lmb, gd->bd, (void *)gd->fdt_blob);
+
+	/*
+	 * If the user requested load address falls out of the memory lmb,
+	 * then fallback to accepting this load address without lmb.
+	 */
+	if (lmb_overlaps_region(&lmb.memory, image_load_addr, 1) < 0) {
+		tftp_load_addr = image_load_addr;
+		tftp_load_size = 0;
+		return 0;
+	}
 
 	max_size = lmb_get_free_size(&lmb, image_load_addr);
 	if (!max_size) {
