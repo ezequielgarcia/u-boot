@@ -177,10 +177,13 @@ static inline int store_block(int block, uchar *src, unsigned int len)
 		if (!end_addr)
 			end_addr = ULONG_MAX;
 
-		if (store_addr < tftp_load_addr ||
-		    store_addr + len > end_addr) {
+		if (store_addr < tftp_load_addr) {
 			puts("\nTFTP error: ");
-			puts("trying to overwrite reserved memory...\n");
+			printf("load address 0x%lx beyond store addr 0x%lx\n", store_addr, tftp_load_addr);
+			return -1;
+		} else if (store_addr + len > end_addr) {
+			puts("\nTFTP error: ");
+			printf("end of store address 0x%lx beyond end addr 0x%lx\n", store_addr + len, end_addr);
 			return -1;
 		}
 #endif
@@ -616,8 +619,10 @@ static int tftp_init_load_addr(void)
 	lmb_init_and_reserve(&lmb, gd->bd, (void *)gd->fdt_blob);
 
 	max_size = lmb_get_free_size(&lmb, image_load_addr);
-	if (!max_size)
+	if (!max_size) {
+		printf("\nTFTP error: lmb has zero bytes freed for 0x%lx\n", image_load_addr);
 		return -1;
+	}
 
 	tftp_load_size = max_size;
 #endif
